@@ -33,7 +33,7 @@ app.get('/location', async (req, res) => {
 });
         
 async function getWeather(lat, lon) {
-    const data = weatherData.data;
+    const data = await request.get(`https://api.weatherbit.io/v2.0/forecast/daily?&lat=38.123&lon=-78.543&key=${WEATHER_API_KEY}`);
         
     const forecastArray = data.map((weatherItem) => {
     return {
