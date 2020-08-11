@@ -8,15 +8,15 @@ app.use(cors());
 
 app.use(express.static('public'));
 
-const { GEOCODE_API_KEY } = process.env;
-
-
-
+const { 
+    GEOCODE_API_KEY,
+    WEATHER_API_KEY
+} = process.env;
 
 async function getLatLong(cityName) {
-    const response = await request.get(`https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${cityName}&format=json`);
+    const locationData = await request.get(`https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${cityName}&format=json`);
     
-    const city = response.body[0];
+    const city = locationData.body[0];
     return {
         formatted_query: city.display_name,
         latitude: city.lat,
@@ -31,21 +31,8 @@ app.get('/location', async (req, res) => {
     res.json(mungeData);
     
 });
-
-app.get('/chars', (req, res) => {
-            const response = await request.get('https://alchemy-pokedex.herokuapp.com/api/pokedex?pokemon=char');
-    
-            const pokemon = response.body.results;
-    
-            const names = pokemon.map((poke) => {
-                    return poke.pokemon;
         
-        
-                });
-                res.json(names);
-        });
-        
-function getWeather(lat, lon) {
+async function getWeather(lat, lon) {
     const data = weatherData.data;
         
     const forecastArray = data.map((weatherItem) => {
@@ -68,3 +55,22 @@ app.get('/weather', (req, res) => {
 module.exports = {
     app
 }
+
+
+
+
+
+
+
+// app.get('/chars', (req, res) => {
+//             const response = request.get('https://alchemy-pokedex.herokuapp.com/api/pokedex?pokemon=char');
+
+//             const pokemon = response.body.results;
+
+//             const names = pokemon.map((poke) => {
+//                     return poke.pokemon;
+
+
+//                 });
+//                 res.json(names);
+//         });
