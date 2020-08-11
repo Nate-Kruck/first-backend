@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const weatherData = require('./data/weather.js');
 const request = require('superagent');
 const app = express();
 
@@ -24,16 +23,22 @@ async function getLatLong(cityName) {
     };
 }
 
-app.get('/location', async (req, res) => {
-    const userInput = req.query.search;
+app.get('/location', async(req, res) => {
+    try {
+        const userInput = req.query.search;
     
-    const mungeData = await getLatLong(userInput);
-    res.json(mungeData);
+        const mungeData = await getLatLong(userInput);
+        res.json(mungeData);
+    } catch(e) {
+        res.status(500).json({ error: e.message })
+    }
     
 });
         
 async function getWeather(lat, lon) {
-    const data = await request.get(`https://api.weatherbit.io/v2.0/forecast/daily?&lat=38.123&lon=-78.543&key=${WEATHER_API_KEY}`);
+    const response = await request.get(`https://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&key=${WEATHER_API_KEY}`);
+
+    const data = response.body.data;
         
     const forecastArray = data.map((weatherItem) => {
     return {
@@ -44,12 +49,16 @@ async function getWeather(lat, lon) {
     return forecastArray;
 }
 
-app.get('/weather', (req, res) => {
-    const userLat = req.query.latitude;
-    const userLon = req.query.longitude;
+app.get('/weather', async(req, res) => {
+    try {
+        const userLat = req.query.latitude;
+        const userLon = req.query.longitude;
 
-    const mungeData = getWeather(userLat, userLon);
-    res.json(mungeData);
+        const mungeData = await getWeather(userLat, userLon);
+        res.json(mungeData);
+    } catch (e) {
+        res.status(500).json({ error: e.message })
+    }
 });
 
 module.exports = {
