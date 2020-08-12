@@ -9,7 +9,8 @@ app.use(express.static('public'));
 
 const { 
     GEOCODE_API_KEY,
-    WEATHER_API_KEY
+    WEATHER_API_KEY,
+    TRAIL_API_KEY
 } = process.env;
 
 async function getLatLong(cityName) {
@@ -46,7 +47,7 @@ async function getWeather(lat, lon) {
         time: new Date(weatherItem.ts * 1000),
             };
     });
-    return forecastArray;
+    return forecastArray.slice(0, 1);
 }
 
 app.get('/weather', async(req, res) => {
@@ -61,6 +62,43 @@ app.get('/weather', async(req, res) => {
     }
 });
 
+
+async function getTrails(lat, lon) {
+    const response = await request.get(`https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&maxDistance=200&key=${TRAIL_API_KEY}`);
+
+    const hikes = response.body.trails;
+
+    const trailHike = hikes.map(trail => {
+        return {
+            trail_url: trail.trail_url,
+            name: trail.name,
+            location: trail.location,
+            length: trail.length,
+            trail_rating: trail.stars,
+            summary: trail.summary,
+            length: trail.length,
+            condition: trail.conditionStatus,
+            condition_date: new Date(trail.conditionDate).toDateString(),
+            condition_time: new Date(trail.conditionTime).toTimeString(),
+        };
+    });
+    return trailHike;
+    }
+
+app.get('/trails', async(req, res) => {
+    try {
+        const userLat = req.query.latitude;
+        const userLon = req.query.longitude;
+
+        const mungeData = await getTrails(userLat, userLon);
+        res.json(mungeData);
+    } catch(e) {
+        res.status(500).json({ error: e.message })
+    }
+});
+
+
+
 module.exports = {
     app
 }
@@ -68,18 +106,15 @@ module.exports = {
 
 
 
-
-
-
 // app.get('/chars', (req, res) => {
-//             const response = request.get('https://alchemy-pokedex.herokuapp.com/api/pokedex?pokemon=char');
-
-//             const pokemon = response.body.results;
-
-//             const names = pokemon.map((poke) => {
-//                     return poke.pokemon;
-
-
+    //             const response = request.get('https://alchemy-pokedex.herokuapp.com/api/pokedex?pokemon=char');
+    
+    //             const pokemon = response.body.results;
+    
+    //             const names = pokemon.map((poke) => {
+        //                     return poke.pokemon;
+        
+        
 //                 });
 //                 res.json(names);
 //         });
